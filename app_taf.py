@@ -29,7 +29,7 @@ dia_actual = ahora_utc.strftime("%d")
 hora_actual = ahora_utc.strftime("%H%M")
 
 # --- 0. ENCABEZADO DEL BOLETÍN ---
-st.header("0. Encabezado del Boletín (Opcional)")
+st.header(" Encabezado de mensaje segun Nac&Int (Opcional)")
 col_b1, col_b2, col_b3 = st.columns(3)
 
 with col_b1:
