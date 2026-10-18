@@ -29,7 +29,7 @@ dia_actual = ahora_utc.strftime("%d")
 hora_actual = ahora_utc.strftime("%H%M")
 
 # --- 0. ENCABEZADO DEL BOLETÍN ---
-st.header(" Encabezado de mensaje segun Nac&Int (Opcional)")
+st.header("0. Encabezado del Boletín (Opcional)")
 col_b1, col_b2, col_b3 = st.columns(3)
 
 with col_b1:
@@ -92,17 +92,41 @@ with col_v4:
 with col_v5:
     tiempo_sig = st.text_input("Tiempo (ej. -RA, FG)", value="")
 
-# --- 3. NUBOSIDAD INICIAL ---
+# --- 3. NUBOSIDAD INICIAL (MÚLTIPLES CAPAS) ---
 st.header("3. Nubosidad Inicial")
-col_n1, col_n2, col_n3 = st.columns(3)
 
+# CAPA 1
+st.markdown("**Capa 1 (Principal)**")
+col_n1, col_n2, col_n3 = st.columns(3)
 with col_n1:
-    nubes_cant = st.selectbox("Cobertura", ["CAVOK", "FEW", "SCT", "BKN", "OVC", "NSC"])
+    nubes_cant_1 = st.selectbox("Cobertura 1", ["CAVOK", "FEW", "SCT", "BKN", "OVC", "NSC"])
 with col_n2:
-    alt_default = "030" if nubes_cant not in ["CAVOK", "NSC"] else ""
-    nubes_alt = st.text_input("Altura (FL, ej. 030)", value=alt_default)
+    alt_default_1 = "030" if nubes_cant_1 not in ["CAVOK", "NSC"] else ""
+    nubes_alt_1 = st.text_input("Altura 1 (FL, ej. 030)", value=alt_default_1, disabled=nubes_cant_1 in ["CAVOK", "NSC"])
 with col_n3:
-    nubes_tipo = st.selectbox("Tipo [Opcional]", ["", "CB", "TCU"])
+    nubes_tipo_1 = st.selectbox("Tipo 1 [Opcional]", ["", "CB", "TCU"], disabled=nubes_cant_1 in ["CAVOK", "NSC"])
+
+es_cavok_nsc = nubes_cant_1 in ["CAVOK", "NSC"]
+
+# CAPA 2
+st.markdown("**Capa 2**")
+col_n4, col_n5, col_n6 = st.columns(3)
+with col_n4:
+    nubes_cant_2 = st.selectbox("Cobertura 2", ["", "FEW", "SCT", "BKN", "OVC"], disabled=es_cavok_nsc)
+with col_n5:
+    nubes_alt_2 = st.text_input("Altura 2 (FL, ej. 080)", value="", disabled=es_cavok_nsc or not nubes_cant_2)
+with col_n6:
+    nubes_tipo_2 = st.selectbox("Tipo 2 [Opcional]", ["", "CB", "TCU"], disabled=es_cavok_nsc or not nubes_cant_2)
+
+# CAPA 3
+st.markdown("**Capa 3**")
+col_n7, col_n8, col_n9 = st.columns(3)
+with col_n7:
+    nubes_cant_3 = st.selectbox("Cobertura 3", ["", "FEW", "SCT", "BKN", "OVC"], disabled=es_cavok_nsc)
+with col_n8:
+    nubes_alt_3 = st.text_input("Altura 3 (FL, ej. 200)", value="", disabled=es_cavok_nsc or not nubes_cant_3)
+with col_n9:
+    nubes_tipo_3 = st.selectbox("Tipo 3 [Opcional]", ["", "CB", "TCU"], disabled=es_cavok_nsc or not nubes_cant_3)
 
 # --- 4. GRUPOS DE CAMBIO (DINÁMICOS) ---
 st.header("4. Grupos de Cambio (Evolución)")
@@ -147,10 +171,18 @@ if raf_viento:
     viento_str += f"G{raf_viento}"
 viento_str += "KT"
 
-if nubes_cant in ["CAVOK", "NSC"]:
-    nubes_str = nubes_cant
+# Ensamblamos las 3 capas de nubes
+if es_cavok_nsc:
+    nubes_str = nubes_cant_1
 else:
-    nubes_str = f"{nubes_cant}{nubes_alt}{nubes_tipo}"
+    capas = []
+    if nubes_cant_1:
+        capas.append(f"{nubes_cant_1}{nubes_alt_1}{nubes_tipo_1}")
+    if nubes_cant_2:
+        capas.append(f"{nubes_cant_2}{nubes_alt_2}{nubes_tipo_2}")
+    if nubes_cant_3:
+        capas.append(f"{nubes_cant_3}{nubes_alt_3}{nubes_tipo_3}")
+    nubes_str = " ".join(capas)
 
 partes_taf = [
     "TAF", oaci, f"{dia_origen}{hora_origen}Z", f"{validez_inicio}/{validez_fin}",
